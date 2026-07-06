@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DHI + ABCS Combined Questionnaire</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f5f5f7; padding:20px; }
+.container { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:10px; }
+h1 { font-size:1.6rem; margin-top:10px; }
+h2 { font-size:1.3rem; margin-top:25px; }
+.instructions { font-size:0.95rem; color:#444; }
+table { width:100%; border-collapse:collapse; margin-top:1rem; }
+th, td { padding:10px; vertical-align:top; }
+tr:nth-child(even) { background:#fafafa; }
+label { display:block; margin-bottom:4px; }
+button { margin-top:20px; padding:10px 20px; font-size:1rem; border:none; border-radius:5px; background:#007aff; color:#fff; cursor:pointer; }
+button:hover { background:#005fcc; }
+
+.modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+.modal-content { background:#fff; margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:420px; text-align:center; }
+.close { float:right; font-size:28px; cursor:pointer; }
+.result-score { font-size:1.2rem; font-weight:bold; margin:6px 0; }
+.small { font-size:0.85rem; color:#555; }
+.slider-value { font-weight:bold; margin-left:10px; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Dizziness Handicap Inventory (DHI)</h1>
+<p class="instructions">
+Please answer each question as it pertains to your dizziness or unsteadiness problems during the last month.  
+Scoring: Yes = 4, Sometimes = 2, No = 0.
+</p>
+
+<table>
+<tr><th>Item</th><th>Question</th><th>Response</th></tr>
+
+<script>
+const dhiItems = [
+["P1","Does looking up increase your problem?"],
+["E2","Because of your problem, do you feel frustrated?"],
+["F3","Because of your problem, do you restrict your travel for business or recreation?"],
+["P4","Does walking down the aisle of a supermarket increase your problems?"],
+["F5","Because of your problem, do you have difficulty getting into or out of bed?"],
+["F6","Does your problem significantly restrict your participation in social activities?"],
+["F7","Because of your problem, do you have difficulty reading?"],
+["P8","Do ambitious activities (sports, dancing, chores) increase your problems?"],
+["E9","Are you afraid to leave your home without someone accompanying you?"],
+["E10","Have you been embarrassed in front of others because of your problem?"],
+["P11","Do quick movements of your head increase your problem?"],
+["F12","Do you avoid heights because of your problem?"],
+["P13","Does turning over in bed increase your problem?"],
+["F14","Is strenuous homework or yard work difficult because of your problem?"],
+["E15","Are you afraid people may think you are intoxicated?"],
+["F16","Is it difficult to go for a walk by yourself?"],
+["P17","Does walking down a sidewalk increase your problem?"],
+["E18","Is it difficult for you to concentrate?"],
+["F19","Is it difficult to walk around your house in the dark?"],
+["E20","Are you afraid to stay home alone?"],
+["E21","Do you feel handicapped because of your problem?"],
+["E22","Has your problem placed stress on family or friend relationships?"],
+["E23","Are you depressed because of your problem?"],
+["F24","Does your problem interfere with job or household responsibilities?"],
+["P25","Does bending over increase your problem?"]
+];
+
+for (let i=1;i<=25;i++){
+document.write(`
+<tr>
+<td>${dhiItems[i-1][0]}</td>
+<td>${dhiItems[i-1][1]}</td>
+<td>
+<label><input type="radio" name="d${i}" value="4">Yes</label>
+<label><input type="radio" name="d${i}" value="2">Sometimes</label>
+<label><input type="radio" name="d${i}" value="0">No</label>
+</td>
+</tr>
+`);
+}
+</script>
+</table>
+
+<h2>Activities-specific Balance Confidence (ABC) Scale</h2>
+<p class="instructions">
+Indicate your confidence (0–100%) that you will not lose your balance or become unsteady.
+</p>
+
+<table>
+<tr><th>#</th><th>Activity</th><th>Confidence (%)</th></tr>
+
+<script>
+const abcItems = [
+"walk around the house?",
+"walk up or down stairs?",
+"bend over and pick up a slipper from the closet floor?",
+"reach for a small can off a shelf at eye level?",
+"stand on your tip toes and reach above your head?",
+"stand on a chair and reach for something?",
+"sweep the floor?",
+"walk outside to a car parked in the driveway?",
+"get into or out of a car?",
+"walk across a parking lot to the mall?",
+"walk up or down a ramp?",
+"walk in a crowded mall where people rapidly walk past you?",
+"be bumped into by people as you walk through the mall?",
+"step onto or off an escalator while holding a railing?",
+"step onto or off an escalator while holding parcels?",
+"walk outside on icy sidewalks?"
+];
+
+for (let i=1;i<=16;i++){
+document.write(`
+<tr>
+<td>${i}</td>
+<td>How confident are you that you will not lose your balance or become unsteady when you ${abcItems[i-1]}</td>
+<td>
+<input type="range" min="0" max="100" value="50" name="abc${i}" oninput="updateValue(${i}, this.value)">
+<span id="val${i}" class="slider-value">50%</span>
+</td>
+</tr>
+`);
+}
+</script>
+</table>
+
+<button onclick="openPassword()">Show to therapist</button>
+
+</div>
+
+<!-- Modal -->
+<div id="resultModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+
+    <div id="passwordSection">
+      <p>Please enter password:</p>
+      <input type="password" id="pwdInput">
+      <button onclick="verifyPassword()">Confirm</button>
+    </div>
+
+    <div id="resultSection" style="display:none;">
+      <h3>Results</h3>
+
+      <p class="result-score">DHI Total Score: <span id="dhiScore"></span></p>
+      <p class="small" id="dhiSeverity"></p>
+
+      <p class="result-score">ABC Average Confidence: <span id="abcScore"></span></p>
+      <p class="small" id="abcRisk"></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function updateValue(i, val){
+  document.getElementById("val"+i).textContent = val + "%";
+}
+
+function calculateDHI(){
+  let total = 0;
+  for (let i=1;i<=25;i++){
+    const radios = document.getElementsByName("d"+i);
+    for (const r of radios){
+      if (r.checked) total += Number(r.value);
+    }
+  }
+  let severity = "";
+  if (total >= 54) severity = "Severe handicap";
+  else if (total >= 36) severity = "Moderate handicap";
+  else if (total >= 16) severity = "Mild handicap";
+  else severity = "No or minimal handicap";
+  return { total, severity };
+}
+
+function calculateABC(){
+  let total = 0;
+  for (let i=1;i<=16;i++){
+    total += Number(document.getElementsByName("abc"+i)[0].value);
+  }
+  const avg = total / 16;
+  const risk = avg < 67 ? "Higher fall risk — further assessment recommended." : "Good balance confidence.";
+  return { avg: avg.toFixed(1) + "%", risk };
+}
+
+function openPassword(){
+  document.getElementById("resultModal").style.display = "block";
+}
+
+function closeModal(){
+  document.getElementById("resultModal").style.display = "none";
+  document.getElementById("passwordSection").style.display = "block";
+  document.getElementById("resultSection").style.display = "none";
+  document.getElementById("pwdInput").value = "";
+}
+
+function verifyPassword(){
+  const pwd = document.getElementById("pwdInput").value;
+  if (pwd !== "225500"){
+    alert("Incorrect password");
+    return;
+  }
+
+  const dhi = calculateDHI();
+  const abc = calculateABC();
+
+  document.getElementById("dhiScore").textContent = dhi.total;
+  document.getElementById("dhiSeverity").textContent = dhi.severity;
+
+  document.getElementById("abcScore").textContent = abc.avg;
+  document.getElementById("abcRisk").textContent = abc.risk;
+
+  document.getElementById("passwordSection").style.display = "none";
+  document.getElementById("resultSection").style.display = "block";
+}
+</script>
+
+</body>
+</html>
